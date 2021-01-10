@@ -16,9 +16,7 @@ import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.ThroughputProperties;
-import com.azure.cosmos.sample.common.AccountSettings;
-import com.azure.cosmos.sample.common.Families;
-import com.azure.cosmos.sample.common.Family;
+import com.azure.cosmos.sample.common.*;
 import com.azure.cosmos.util.CosmosPagedFlux;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,14 +26,13 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.stream.Collectors;
-import java.util.List;
 
 public class AsyncMain {
 
     private CosmosAsyncClient client;
 
-    private final String databaseName = "AzureSampleFamilyDB";
-    private final String containerName = "FamilyContainer";
+    private final String databaseName = "MainDB";
+    private final String containerName = "Employee";
 
     private CosmosAsyncDatabase database;
     private CosmosAsyncContainer container;
@@ -75,41 +72,41 @@ public class AsyncMain {
         //  Create async client
         //  <CreateAsyncClient>
         client = new CosmosClientBuilder()
-            .endpoint(AccountSettings.HOST)
-            .key(AccountSettings.MASTER_KEY)
-            //  Setting the preferred location to Cosmos DB Account region
-            //  West US is just an example. User should set preferred location to the Cosmos DB region closest to the application
-            .preferredRegions(Collections.singletonList("West US"))
-            .consistencyLevel(ConsistencyLevel.EVENTUAL)
-            //  Setting content response on write enabled, which enables the SDK to return response on write operations.
-            .contentResponseOnWriteEnabled(true)
-            .buildAsyncClient();
+                .endpoint(AccountSettings.HOST)
+                .key(AccountSettings.MASTER_KEY)
+                //  Setting the preferred location to Cosmos DB Account region
+                //  West US is just an example. User should set preferred location to the Cosmos DB region closest to the application
+                .preferredRegions(Collections.singletonList("West Europe"))
+                .consistencyLevel(ConsistencyLevel.EVENTUAL)
+                //  Setting content response on write enabled, which enables the SDK to return response on write operations.
+                .contentResponseOnWriteEnabled(true)
+                .buildAsyncClient();
 
         //  </CreateAsyncClient>
 
         createDatabaseIfNotExists();
         createContainerIfNotExists();
 
-        Family andersenFamilyItem=Families.getAndersenFamilyItem();
-        Family wakefieldFamilyItem=Families.getWakefieldFamilyItem();
-        Family johnsonFamilyItem=Families.getJohnsonFamilyItem();
-        Family smithFamilyItem=Families.getSmithFamilyItem();
+        Employee developerEmployeeItem = Employees.getDeveloperEmployeeItem();
+        Employee devOpsEmployeeItem = Employees.getDevOpsEmployeeItem();
+        Employee operationalEmployeeItem = Employees.getOperationalEmployeeItem();
+        Employee cepEmployeeItem = Employees.getCEOEmployeeItem();
 
         //  Setup family items to create
-        Flux<Family> familiesToCreate = Flux.just(andersenFamilyItem,
-                                            wakefieldFamilyItem,
-                                            johnsonFamilyItem,
-                                            smithFamilyItem);
+        Flux<Employee> employeesToCreate = Flux.just(developerEmployeeItem,
+                devOpsEmployeeItem,
+                operationalEmployeeItem,
+                cepEmployeeItem);
 
-        createFamilies(familiesToCreate);
+        createEmployees(employeesToCreate);
 
-        familiesToCreate = Flux.just(andersenFamilyItem,
-                                wakefieldFamilyItem,
-                                johnsonFamilyItem,
-                                smithFamilyItem);
+        employeesToCreate = Flux.just(developerEmployeeItem,
+                developerEmployeeItem,
+                operationalEmployeeItem,
+                cepEmployeeItem);
 
         logger.info("Reading items.");
-        readItems(familiesToCreate);
+        readItems(employeesToCreate);
 
         logger.info("Querying items.");
         queryItems();
@@ -135,9 +132,9 @@ public class AsyncMain {
         //  Create container if not exists
         //  <CreateContainerIfNotExists>
 
-        CosmosContainerProperties containerProperties = new CosmosContainerProperties(containerName, "/lastName");
+        CosmosContainerProperties containerProperties = new CosmosContainerProperties(containerName, "/jobtitle");
         Mono<CosmosContainerResponse> containerResponseMono = database.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400));
-        
+
         //  Create container with 400 RU/s
         containerResponseMono.flatMap(containerResponse -> {
             container = database.getContainer(containerResponse.getProperties().getId());
@@ -148,15 +145,15 @@ public class AsyncMain {
         //  </CreateContainerIfNotExists>
     }
 
-    private void createFamilies(Flux<Family> families) throws Exception {
+    private void createEmployees(Flux<Employee> employees) throws Exception {
 
         //  <CreateItem>
 
         try {
 
             //  Combine multiple item inserts, associated success println's, and a final aggregate stats println into one Reactive stream.
-            double charge = families.flatMap(family -> {
-                return container.createItem(family);
+            double charge = employees.flatMap(employee -> {
+                return container.createItem(employee);
             }) //Flux of item request responses
                     .flatMap(itemResponse -> {
                         logger.info("Created item with request charge of {} within" +
@@ -186,21 +183,29 @@ public class AsyncMain {
         //  </CreateItem>            
     }
 
-    private void readItems(Flux<Family> familiesToCreate) {
+    private void readItems(Flux<Employee> employeesToCreate) {
         //  Using partition key for point read scenarios.
         //  This will help fast look up of items because of partition key
         //  <ReadItem>
 
         try {
 
-            familiesToCreate.flatMap(family -> {
-                Mono<CosmosItemResponse<Family>> asyncItemResponseMono = container.readItem(family.getId(), new PartitionKey(family.getLastName()), Family.class);
-                return asyncItemResponseMono;
-            }).flatMap(itemResponse -> {
-                double requestCharge = itemResponse.getRequestCharge();
-                Duration requestLatency = itemResponse.getDuration();
-                logger.info("Item successfully read with id {} with a charge of {} and within duration {}",
-                        itemResponse.getItem().getId(), requestCharge, requestLatency);
+//            employeesToCreate.flatMap(employee -> {
+//                Mono<CosmosItemResponse<Employee>> asyncItemResponseMono = container.readItem(employee.getId(), new PartitionKey(employee.getJobTitle()), Employee.class);
+//                return asyncItemResponseMono;
+//            }).flatMap(itemResponse -> {
+//                double requestCharge = itemResponse.getRequestCharge();
+//                Duration requestLatency = itemResponse.getDuration();
+//                logger.info("Item successfully read with id {} with a charge of {} and within duration {}",
+//                        itemResponse.getItem().getId(), requestCharge, requestLatency);
+//                return Flux.empty();
+//            }).blockLast();
+
+            employeesToCreate.flatMap(employee -> {
+                String firstName = employee.getFirstName();
+                String lastName = employee.getLastName();
+                logger.info("Item successfully read with id {} with first name: {} and last name: {}",
+                        employee.getId(), firstName, lastName);
                 return Flux.empty();
             }).blockLast();
 
@@ -229,8 +234,8 @@ public class AsyncMain {
         //  Set populate query metrics to get metrics around query executions
         queryOptions.setQueryMetricsEnabled(true);
 
-        CosmosPagedFlux<Family> pagedFluxResponse = container.queryItems(
-                "SELECT * FROM Family WHERE Family.lastName IN ('Andersen', 'Wakefield', 'Johnson')", queryOptions, Family.class);
+        CosmosPagedFlux<Employee> pagedFluxResponse = container.queryItems(
+                "SELECT * FROM Employee WHERE Employee.jobTitle IN ('Developer', 'DevOps', 'Operational')", queryOptions, Employee.class);
 
         try {
 
@@ -242,13 +247,13 @@ public class AsyncMain {
                 logger.info("Item Ids " + fluxResponse
                         .getResults()
                         .stream()
-                        .map(Family::getId)
+                        .map(Employee::getId)
                         .collect(Collectors.toList()));
 
                 return Flux.empty();
             }).blockLast();
 
-        } catch(Exception err) {
+        } catch (Exception err) {
             if (err instanceof CosmosException) {
                 //Client-specific errors
                 CosmosException cerr = (CosmosException) err;
