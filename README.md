@@ -38,10 +38,17 @@ cd azure-cosmos-java-getting-started
 mvn clean package
 ```
 
-* From a command prompt or shell, run the following command to run the application.
+* This demo has both sync and async modes.
+* From a command prompt or shell, run the following command to run the SYNC application.
 
 ```bash
-mvn exec:java -DACCOUNT_HOST=YOUR_COSMOS_DB_HOSTNAME -DACCOUNT_KEY=YOUR_COSMOS_DB_MASTER_KEY
+mvn exec:java@sync -DACCOUNT_HOST=YOUR_COSMOS_DB_HOSTNAME -DACCOUNT_KEY=YOUR_COSMOS_DB_MASTER_KEY
+```
+
+* From a command prompt or shell, run the following command to run the ASYNC application.
+
+```bash
+mvn exec:java@async -DACCOUNT_HOST=YOUR_COSMOS_DB_HOSTNAME -DACCOUNT_KEY=YOUR_COSMOS_DB_MASTER_KEY
 ```
 
 ## About the code
@@ -50,10 +57,10 @@ The code included in this sample is intended to get you quickly started with a J
 
 ## More information
 
-- [Azure Cosmos DB](https://docs.microsoft.com/azure/cosmos-db/introduction)
-- [Azure Cosmos DB : SQL API](https://docs.microsoft.com/azure/cosmos-db/sql-api-introduction)
-- [Java SDK Github for SQL API of Azure Cosmos DB](https://github.com/Azure/azure-sdk-for-java/tree/feature/cosmos/v4/sdk/cosmos)
-- [Java SDK JavaDoc for SQL API of Azure Cosmos DB](TO BE UPDATED)
+- [Azure Cosmos DB : Service introduction and SLA](https://docs.microsoft.com/azure/cosmos-db/sql-api-introduction)
+- [Azure Cosmos DB : SQL API](https://docs.microsoft.com/en-us/azure/cosmos-db/sql-query-getting-started)
+- [Java SDK Github for SQL API of Azure Cosmos DB](https://github.com/Azure/azure-sdk-for-java/tree/master/sdk/cosmos/azure-cosmos)
+- [Java SDK JavaDoc for SQL API of Azure Cosmos DB](https://azuresdkdocs.blob.core.windows.net/$web/java/azure-cosmos/latest/index.html)
 
 ## Contributing
 

@@ -30,11 +30,11 @@ public class AccountSettings {
             System.getProperty("ACCOUNT_KEY", 
                     StringUtils.defaultString(StringUtils.trimToNull(
                             System.getenv().get("ACCOUNT_KEY")),
-                            "BZJY1yhvnWwz9mzeY0KMUueOQkqb4jjCkKwdI07E5K2wfQgp4DIDcTJAD4esyiEtmWCZCy2QSxaN4w02oIlpPQ=="));
+                            "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="));
 
     public static String HOST =
             System.getProperty("ACCOUNT_HOST",
                     StringUtils.defaultString(StringUtils.trimToNull(
                             System.getenv().get("ACCOUNT_HOST")),
-                            "https://az204-cosmosdb-exam.documents.azure.com:443/"));
+                            "https://localhost:443/"));
 }
