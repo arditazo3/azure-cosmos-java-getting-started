@@ -17,9 +17,7 @@ import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.ThroughputProperties;
-import com.azure.cosmos.sample.common.AccountSettings;
-import com.azure.cosmos.sample.common.Families;
-import com.azure.cosmos.sample.common.Family;
+import com.azure.cosmos.sample.common.*;
 import com.azure.cosmos.util.CosmosPagedIterable;
 
 import java.time.Duration;
@@ -30,13 +28,14 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 public class SyncMain {
 
     private CosmosClient client;
 
-    private final String databaseName = "AzureSampleFamilyDB";
-    private final String containerName = "FamilyContainer";
+    private final String databaseName = "MainDB";
+    private final String containerName = "Employee";
 
     private CosmosDatabase database;
     private CosmosContainer container;
@@ -77,13 +76,13 @@ public class SyncMain {
         //  Create sync client
         //  <CreateSyncClient>
         client = new CosmosClientBuilder()
-            .endpoint(AccountSettings.HOST)
-            .key(AccountSettings.MASTER_KEY)
-            //  Setting the preferred location to Cosmos DB Account region
-            //  West US is just an example. User should set preferred location to the Cosmos DB region closest to the application
-            .preferredRegions(Collections.singletonList("West US"))
-            .consistencyLevel(ConsistencyLevel.EVENTUAL)
-            .buildClient();
+                .endpoint(AccountSettings.HOST)
+                .key(AccountSettings.MASTER_KEY)
+                //  Setting the preferred location to Cosmos DB Account region
+                //  West US is just an example. User should set preferred location to the Cosmos DB region closest to the application
+                .preferredRegions(Collections.singletonList("West US"))
+                .consistencyLevel(ConsistencyLevel.EVENTUAL)
+                .buildClient();
 
         //  </CreateSyncClient>
 
@@ -91,16 +90,16 @@ public class SyncMain {
         createContainerIfNotExists();
 
         //  Setup family items to create
-        ArrayList<Family> familiesToCreate = new ArrayList<>();
-        familiesToCreate.add(Families.getAndersenFamilyItem());
-        familiesToCreate.add(Families.getWakefieldFamilyItem());
-        familiesToCreate.add(Families.getJohnsonFamilyItem());
-        familiesToCreate.add(Families.getSmithFamilyItem());
+        ArrayList<Employee> employeesToCreate = new ArrayList<>();
+        employeesToCreate.add(Employees.getDeveloperEmployeeItem());
+        employeesToCreate.add(Employees.getDevOpsEmployeeItem());
+        employeesToCreate.add(Employees.getOperationalEmployeeItem());
+        employeesToCreate.add(Employees.getCEOEmployeeItem());
 
-        createFamilies(familiesToCreate);
+//        createEmployees(employeesToCreate);
 
         logger.info("Reading items.");
-        readItems(familiesToCreate);
+        readItems(employeesToCreate);
 
         logger.info("Querying items.");
         queryItems();
@@ -124,20 +123,20 @@ public class SyncMain {
         //  Create container if not exists
         //  <CreateContainerIfNotExists>
         CosmosContainerProperties containerProperties =
-            new CosmosContainerProperties(containerName, "/lastName");
+                new CosmosContainerProperties(containerName, "/lastName");
 
         //  Create container with 400 RU/s
         CosmosContainerResponse cosmosContainerResponse =
-            database.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400));
+                database.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400));
         container = database.getContainer(cosmosContainerResponse.getProperties().getId());
         //  </CreateContainerIfNotExists>
 
         logger.info("Checking container {} completed!\n", container.getId());
     }
 
-    private void createFamilies(List<Family> families) throws Exception {
+    private void createEmployees(List<Employee> employees) throws Exception {
         double totalRequestCharge = 0;
-        for (Family family : families) {
+        for (Employee employee : employees) {
 
             //  <CreateItem>
             //  Create item using container that we created using sync client
@@ -145,35 +144,35 @@ public class SyncMain {
             //  Use lastName as partitionKey for cosmos item
             //  Using appropriate partition key improves the performance of database operations
             CosmosItemRequestOptions cosmosItemRequestOptions = new CosmosItemRequestOptions();
-            CosmosItemResponse<Family> item = container.createItem(family, new PartitionKey(family.getLastName()), cosmosItemRequestOptions);
+            CosmosItemResponse<Employee> item = container.createItem(employee, new PartitionKey(employee.getLastName()), cosmosItemRequestOptions);
             //  </CreateItem>
 
             //  Get request charge and other properties like latency, and diagnostics strings, etc.
             logger.info("Created item with request charge of {} within duration {}",
-                item.getRequestCharge(), item.getDuration());
+                    item.getRequestCharge(), item.getDuration());
             totalRequestCharge += item.getRequestCharge();
         }
         logger.info("Created {} items with total request charge of {}",
-            families.size(),
-            totalRequestCharge);
+                employees.size(),
+                totalRequestCharge);
     }
 
-    private void readItems(ArrayList<Family> familiesToCreate) {
+    private void readItems(ArrayList<Employee> employeesToCreate) {
         //  Using partition key for point read scenarios.
         //  This will help fast look up of items because of partition key
-        familiesToCreate.forEach(family -> {
-            //  <ReadItem>
-            try {
-                CosmosItemResponse<Family> item = container.readItem(family.getId(), new PartitionKey(family.getLastName()), Family.class);
-                double requestCharge = item.getRequestCharge();
-                Duration requestLatency = item.getDuration();
-                logger.info("Item successfully read with id {} with a charge of {} and within duration {}",
-                    item.getItem().getId(), requestCharge, requestLatency);
-            } catch (CosmosException e) {
-                logger.error("Read Item failed with", e);
-            }
-            //  </ReadItem>
-        });
+//        employeesToCreate.forEach(employee -> {
+//            //  <ReadItem>
+//            try {
+//                CosmosItemResponse<Employee> item = container.readItem(employee.getId(), new PartitionKey(employee.getLastName()), Employee.class);
+//                double requestCharge = item.getRequestCharge();
+//                Duration requestLatency = item.getDuration();
+//                logger.info("Item successfully read with id {} with a charge of {} and within duration {}",
+//                        item.getItem().getId(), requestCharge, requestLatency);
+//            } catch (CosmosException e) {
+//                logger.error("Read Item failed with", e);
+//            }
+//            //  </ReadItem>
+//        });
     }
 
     private void queryItems() {
@@ -184,18 +183,18 @@ public class SyncMain {
         //  Set query metrics enabled to get metrics around query executions
         queryOptions.setQueryMetricsEnabled(true);
 
-        CosmosPagedIterable<Family> familiesPagedIterable = container.queryItems(
-            "SELECT * FROM Family WHERE Family.lastName IN ('Andersen', 'Wakefield', 'Johnson')", queryOptions, Family.class);
+        CosmosPagedIterable<Employee> employeesPagedIterable = container.queryItems(
+                "SELECT * FROM Family", queryOptions, Employee.class);
 
-        familiesPagedIterable.iterableByPage(10).forEach(cosmosItemPropertiesFeedResponse -> {
+        employeesPagedIterable.iterableByPage(10).forEach(cosmosItemPropertiesFeedResponse -> {
             logger.info("Got a page of query result with {} items(s) and request charge of {}",
                     cosmosItemPropertiesFeedResponse.getResults().size(), cosmosItemPropertiesFeedResponse.getRequestCharge());
 
             logger.info("Item Ids {}", cosmosItemPropertiesFeedResponse
-                .getResults()
-                .stream()
-                .map(Family::getId)
-                .collect(Collectors.toList()));
+                    .getResults()
+                    .stream()
+                    .map(Employee::getId)
+                    .collect(Collectors.toList()));
         });
         //  </QueryItems>
     }

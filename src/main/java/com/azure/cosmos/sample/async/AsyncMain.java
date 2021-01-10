@@ -98,7 +98,7 @@ public class AsyncMain {
                 operationalEmployeeItem,
                 cepEmployeeItem);
 
-        createEmployees(employeesToCreate);
+//        createEmployees(employeesToCreate);
 
         employeesToCreate = Flux.just(developerEmployeeItem,
                 developerEmployeeItem,
@@ -252,7 +252,6 @@ public class AsyncMain {
 
                 return Flux.empty();
             }).blockLast();
-
         } catch (Exception err) {
             if (err instanceof CosmosException) {
                 //Client-specific errors
